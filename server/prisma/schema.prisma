@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  passwordHash     String
+  name             String?
+  twoFactorEnabled Boolean   @default(false)
+  twoFactorSecret  String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  categories    Category[]
+  expenses      Expense[]
+  incomes       Income[]
+  exchangeRates ExchangeRate[]
+  settings      Settings?
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  kind        String    @default("EXPENSE")
+  color       String    @default("#6366f1")
+  icon        String    @default("Tag")
+  budget      Float?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  expenses    Expense[]
+  incomes     Income[]
+
+  @@unique([userId, name, kind])
+}
+
+model Expense {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  description String
+  amount      Float
+  currency    String    @default("USD")
+  amountBase  Float
+  date        DateTime  @default(now())
+  notes       String?
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([date])
+  @@index([categoryId])
+  @@index([userId])
+}
+
+model Income {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  description String
+  amount      Float
+  currency    String    @default("USD")
+  amountBase  Float
+  date        DateTime  @default(now())
+  notes       String?
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([date])
+  @@index([categoryId])
+  @@index([userId])
+}
+
+model ExchangeRate {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currency   String
+  rateToBase Float
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, currency])
+}
+
+model Settings {
+  id                   String  @id @default(cuid())
+  userId               String  @unique
+  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  baseCurrency         String  @default("USD")
+  monthlyBudget        Float?
+  budgetAlertsEnabled  Boolean @default(true)
+  budgetAlertThreshold Int     @default(50)
+}

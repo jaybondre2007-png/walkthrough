@@ -1,0 +1,81 @@
+import {
+  Utensils,
+  Car,
+  ShoppingBag,
+  Film,
+  Receipt,
+  HeartPulse,
+  Plane,
+  MoreHorizontal,
+  Tag,
+  Home,
+  Briefcase,
+  GraduationCap,
+  Gift,
+  Dumbbell,
+  Coffee,
+  Wallet,
+  Laptop,
+  TrendingUp,
+  Coins,
+  Landmark,
+  PiggyBank,
+  type LucideIcon,
+} from "lucide-react";
+
+export const ICONS: Record<string, LucideIcon> = {
+  Utensils,
+  Car,
+  ShoppingBag,
+  Film,
+  Receipt,
+  HeartPulse,
+  Plane,
+  MoreHorizontal,
+  Tag,
+  Home,
+  Briefcase,
+  GraduationCap,
+  Gift,
+  Dumbbell,
+  Coffee,
+  Wallet,
+  Laptop,
+  TrendingUp,
+  Coins,
+  Landmark,
+  PiggyBank,
+};
+
+export const ICON_NAMES = Object.keys(ICONS);
+export const EXPENSE_ICON_NAMES = [
+  "Utensils",
+  "Car",
+  "ShoppingBag",
+  "Film",
+  "Receipt",
+  "HeartPulse",
+  "Plane",
+  "Home",
+  "GraduationCap",
+  "Dumbbell",
+  "Coffee",
+  "Tag",
+  "MoreHorizontal",
+];
+export const INCOME_ICON_NAMES = [
+  "Wallet",
+  "Briefcase",
+  "Laptop",
+  "TrendingUp",
+  "Coins",
+  "Gift",
+  "Landmark",
+  "PiggyBank",
+  "Tag",
+  "MoreHorizontal",
+];
+
+export function getIcon(name: string): LucideIcon {
+  return ICONS[name] ?? Tag;
+}
