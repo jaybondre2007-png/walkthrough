@@ -23,26 +23,10 @@ function SectionHeader({ title, description }: { title: string; description: str
 
 function AccountSection() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const initial = (user?.name?.trim()?.[0] ?? user?.email?.[0] ?? "?").toUpperCase();
 
-  return (
-    <Card className="mb-6">
-      <SectionHeader title="Account" description="Your profile information." />
-      <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-100 text-lg font-semibold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
-          {initial}
-        </div>
-        <div>
-          <p className="font-medium text-neutral-900 dark:text-white">{user?.name || "No name set"}</p>
-          <p className="text-sm text-neutral-500">{user?.email}</p>
-        </div>
-      </div>
-    </Card>
-  );
-}
-
-function PasswordSection() {
-  const { toast } = useToast();
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -55,6 +39,7 @@ function PasswordSection() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+      setShowPasswordForm(false);
     },
     onError: (err) => {
       setError(err instanceof ApiError ? err.message : "Something went wrong.");
@@ -71,44 +56,85 @@ function PasswordSection() {
 
   return (
     <Card className="mb-6">
-      <SectionHeader title="Password" description="Change your account password." />
-      <form onSubmit={handleSubmit} className="max-w-xs space-y-3">
-        <div>
-          <label className={labelClass}>Current password</label>
-          <input
-            className={inputClass}
-            type="password"
-            autoComplete="current-password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-          />
+      <SectionHeader title="Account" description="Your profile information and login credentials." />
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-100 text-lg font-semibold text-brand-700 dark:bg-brand-500/20 dark:text-brand-300">
+            {initial}
+          </div>
+          <div>
+            <p className="font-medium text-neutral-900 dark:text-white">{user?.name || "No name set"}</p>
+            <p className="text-sm text-neutral-500">{user?.email}</p>
+          </div>
         </div>
-        <div>
-          <label className={labelClass}>New password</label>
-          <input
-            className={inputClass}
-            type="password"
-            autoComplete="new-password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className={labelClass}>Confirm new password</label>
-          <input
-            className={inputClass}
-            type="password"
-            autoComplete="new-password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-        </div>
-        {error && <p className="text-sm text-critical">{error}</p>}
-        <Button type="submit" size="sm" disabled={changePassword.isPending}>
-          <ShieldCheck className="h-3.5 w-3.5" />
-          {changePassword.isPending ? "Updating..." : "Update password"}
-        </Button>
-      </form>
+        {!showPasswordForm && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="shrink-0"
+            onClick={() => setShowPasswordForm(true)}
+          >
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Change password
+          </Button>
+        )}
+      </div>
+
+      {showPasswordForm && (
+        <form onSubmit={handleSubmit} className="mt-5 max-w-xs space-y-3 border-t border-neutral-100 pt-5 dark:border-neutral-800">
+          <div>
+            <label className={labelClass}>Current password</label>
+            <input
+              className={inputClass}
+              type="password"
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className={labelClass}>New password</label>
+            <input
+              className={inputClass}
+              type="password"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Confirm new password</label>
+            <input
+              className={inputClass}
+              type="password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </div>
+          {error && <p className="text-sm text-critical">{error}</p>}
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setShowPasswordForm(false);
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+                setError(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" size="sm" disabled={changePassword.isPending}>
+              {changePassword.isPending ? "Updating..." : "Update password"}
+            </Button>
+          </div>
+        </form>
+      )}
     </Card>
   );
 }
@@ -437,13 +463,14 @@ function DangerZoneSection() {
     <Card className="mb-6 border-critical/30">
       <SectionHeader
         title="Reset all data"
-        description="Permanently delete every expense and income entry and start fresh. Your account, categories, and login stay intact."
+        description="Permanently delete every expense, income entry, and budget, and start fresh. Your account, category names, and login stay intact."
       />
 
       {showConfirm ? (
         <form onSubmit={handleSubmit} className="max-w-xs space-y-3">
           <p className="text-xs font-medium text-critical">
-            This cannot be undone. All expenses and income entries will be permanently deleted.
+            This cannot be undone. All expenses, income entries, and category budgets will be
+            permanently deleted.
           </p>
           <div>
             <label className={labelClass}>Confirm your password to reset</label>
@@ -681,7 +708,6 @@ export function SettingsPage() {
       </div>
 
       <AccountSection />
-      <PasswordSection />
       <TwoFactorSection />
       <AppearanceSection />
       <NotificationsSection />

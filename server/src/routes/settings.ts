@@ -121,6 +121,7 @@ router.post("/reset-data", async (req, res) => {
   await prisma.$transaction([
     prisma.expense.deleteMany({ where: { userId } }),
     prisma.income.deleteMany({ where: { userId } }),
+    prisma.category.updateMany({ where: { userId }, data: { budget: null } }),
     prisma.settings.upsert({
       where: { userId },
       update: { monthlyBudget: null, budgetAlertsEnabled: true, budgetAlertThreshold: 50 },
