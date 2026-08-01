@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: walkthrough
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: cd server && npm install && npx prisma generate && npm run build && cd ../client && npm install && npm run build
+    startCommand: cd server && npx prisma migrate deploy && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false

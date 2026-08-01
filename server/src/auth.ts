@@ -33,17 +33,23 @@ export function verifyPending2faToken(token: string): string | null {
   }
 }
 
+const isProduction = process.env.NODE_ENV === "production";
+
 export function setAuthCookie(res: Response, token: string) {
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: false,
+    secure: isProduction,
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 }
 
 export function clearAuthCookie(res: Response) {
-  res.clearCookie(COOKIE_NAME);
+  res.clearCookie(COOKIE_NAME, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isProduction,
+  });
 }
 
 /** Creates a DB-tracked session row and returns the signed cookie token for it.

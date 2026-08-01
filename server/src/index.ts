@@ -1,4 +1,5 @@
 import "dotenv/config";
+import path from "path";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -14,6 +15,7 @@ import recurringRouter from "./routes/recurring";
 const app = express();
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
 const clientOrigin = process.env.CLIENT_ORIGIN ?? "http://localhost:5173";
+const isProduction = process.env.NODE_ENV === "production";
 
 app.use(cors({ origin: clientOrigin, credentials: true }));
 app.use(express.json());
@@ -29,6 +31,14 @@ app.use("/api/settings", settingsRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/analytics", analyticsRouter);
 app.use("/api/recurring", recurringRouter);
+
+if (isProduction) {
+  const clientDist = path.join(__dirname, "../../client/dist");
+  app.use(express.static(clientDist));
+  app.get(/^\/(?!api\/).*/, (_req, res) => {
+    res.sendFile(path.join(clientDist, "index.html"));
+  });
+}
 
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);
