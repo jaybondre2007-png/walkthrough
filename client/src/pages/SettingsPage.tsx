@@ -1,15 +1,31 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Moon, Sun, ShieldCheck, ShieldOff, RotateCcw, RefreshCw } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Moon,
+  Sun,
+  ShieldCheck,
+  ShieldOff,
+  RotateCcw,
+  RefreshCw,
+  Key,
+  Monitor,
+  LogOut,
+  UserX,
+} from "lucide-react";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
+import { RecoveryCodesModal } from "../components/RecoveryCodesModal";
 import { api, ApiError } from "../lib/api";
 import { inputClass, labelClass } from "../lib/styles";
 import { CURRENCIES } from "../lib/currencies";
 import { useAuth } from "../lib/AuthContext";
 import { useTheme } from "../lib/ThemeContext";
 import { useToast } from "../lib/ToastContext";
+import { describeUserAgent } from "../lib/userAgent";
+import { formatRelativeTime } from "../lib/format";
 import clsx from "clsx";
 
 function SectionHeader({ title, description }: { title: string; description: string }) {
@@ -18,6 +34,14 @@ function SectionHeader({ title, description }: { title: string; description: str
       <h2 className="text-sm font-semibold text-neutral-900 dark:text-white">{title}</h2>
       <p className="mt-0.5 text-xs text-neutral-500">{description}</p>
     </div>
+  );
+}
+
+function GroupHeading({ children }: { children: string }) {
+  return (
+    <h2 className="mb-3 mt-8 text-xs font-semibold uppercase tracking-wide text-neutral-400 first:mt-0">
+      {children}
+    </h2>
   );
 }
 
@@ -145,8 +169,12 @@ function TwoFactorSection() {
   const [setupData, setSetupData] = useState<{ secret: string; qrCode: string } | null>(null);
   const [code, setCode] = useState("");
   const [showDisableForm, setShowDisableForm] = useState(false);
+  const [showRegenForm, setShowRegenForm] = useState(false);
   const [password, setPassword] = useState("");
+  const [regenPassword, setRegenPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [regenError, setRegenError] = useState<string | null>(null);
+  const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
 
   const startSetup = useMutation({
     mutationFn: () => api.auth.setup2fa(),
@@ -159,10 +187,11 @@ function TwoFactorSection() {
 
   const verifySetup = useMutation({
     mutationFn: () => api.auth.verify2fa(setupData!.secret, code),
-    onSuccess: async () => {
+    onSuccess: async (data) => {
       await refreshUser();
       setSetupData(null);
       setCode("");
+      setRecoveryCodes(data.recoveryCodes);
       toast("Two-factor authentication enabled.");
     },
     onError: (err) => setError(err instanceof ApiError ? err.message : "Something went wrong."),
@@ -179,124 +208,207 @@ function TwoFactorSection() {
     onError: (err) => setError(err instanceof ApiError ? err.message : "Something went wrong."),
   });
 
-  return (
-    <Card className="mb-6">
-      <div className="mb-4 flex items-start justify-between">
-        <SectionHeader
-          title="Two-factor authentication"
-          description="Add an extra layer of security with a code from an authenticator app."
-        />
-        <span
-          className={clsx(
-            "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium",
-            user?.twoFactorEnabled
-              ? "bg-good/10 text-good"
-              : "bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400"
-          )}
-        >
-          {user?.twoFactorEnabled ? "Enabled" : "Disabled"}
-        </span>
-      </div>
+  const regenerate = useMutation({
+    mutationFn: () => api.auth.regenerateRecoveryCodes(regenPassword),
+    onSuccess: async (data) => {
+      await refreshUser();
+      setShowRegenForm(false);
+      setRegenPassword("");
+      setRecoveryCodes(data.recoveryCodes);
+      toast("New recovery codes generated. Your old codes no longer work.");
+    },
+    onError: (err) => setRegenError(err instanceof ApiError ? err.message : "Something went wrong."),
+  });
 
-      {user?.twoFactorEnabled ? (
-        showDisableForm ? (
+  return (
+    <>
+      <Card className="mb-6">
+        <div className="mb-4 flex items-start justify-between">
+          <SectionHeader
+            title="Two-factor authentication"
+            description="Add an extra layer of security with a code from an authenticator app."
+          />
+          <span
+            className={clsx(
+              "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium",
+              user?.twoFactorEnabled
+                ? "bg-good/10 text-good"
+                : "bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400"
+            )}
+          >
+            {user?.twoFactorEnabled ? "Enabled" : "Disabled"}
+          </span>
+        </div>
+
+        {user?.twoFactorEnabled ? (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
+              {!showDisableForm && (
+                <Button variant="secondary" size="sm" onClick={() => setShowDisableForm(true)}>
+                  <ShieldOff className="h-3.5 w-3.5" />
+                  Disable two-factor authentication
+                </Button>
+              )}
+              {!showRegenForm && (
+                <Button variant="secondary" size="sm" onClick={() => setShowRegenForm(true)}>
+                  <Key className="h-3.5 w-3.5" />
+                  Regenerate recovery codes
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-neutral-500">
+              {user.recoveryCodesRemaining ?? 0} unused recovery code
+              {user.recoveryCodesRemaining === 1 ? "" : "s"} remaining.
+            </p>
+
+            {showDisableForm && (
+              <div className="max-w-xs space-y-3 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                <label className={labelClass}>Confirm your password to disable</label>
+                <input
+                  className={inputClass}
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoFocus
+                />
+                {error && <p className="text-sm text-critical">{error}</p>}
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setShowDisableForm(false);
+                      setPassword("");
+                      setError(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    style={{ backgroundColor: "#d03b3b" }}
+                    className="text-white hover:opacity-90"
+                    disabled={disable.isPending}
+                    onClick={() => {
+                      setError(null);
+                      disable.mutate();
+                    }}
+                  >
+                    {disable.isPending ? "Disabling..." : "Disable 2FA"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {showRegenForm && (
+              <div className="max-w-xs space-y-3 border-t border-neutral-100 pt-4 dark:border-neutral-800">
+                <label className={labelClass}>Confirm your password to regenerate</label>
+                <p className="text-xs text-neutral-500">
+                  Your existing recovery codes will stop working.
+                </p>
+                <input
+                  className={inputClass}
+                  type="password"
+                  value={regenPassword}
+                  onChange={(e) => setRegenPassword(e.target.value)}
+                  autoFocus
+                />
+                {regenError && <p className="text-sm text-critical">{regenError}</p>}
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setShowRegenForm(false);
+                      setRegenPassword("");
+                      setRegenError(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={regenerate.isPending}
+                    onClick={() => {
+                      setRegenError(null);
+                      regenerate.mutate();
+                    }}
+                  >
+                    {regenerate.isPending ? "Generating..." : "Regenerate codes"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : setupData ? (
           <div className="max-w-xs space-y-3">
-            <label className={labelClass}>Confirm your password to disable</label>
-            <input
-              className={inputClass}
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+            <p className="text-xs text-neutral-500">
+              Scan this QR code with Google Authenticator, Authy, or a similar app, then enter the
+              6-digit code it generates.
+            </p>
+            <img
+              src={setupData.qrCode}
+              alt="Two-factor authentication QR code"
+              className="h-40 w-40 rounded-lg border border-neutral-200 dark:border-neutral-700"
             />
+            <p className="break-all text-xs text-neutral-400">
+              Can't scan? Enter this key manually: <span className="font-mono">{setupData.secret}</span>
+            </p>
+            <div>
+              <label className={labelClass}>6-digit code</label>
+              <input
+                className={`${inputClass} text-center tracking-[0.4em]`}
+                inputMode="numeric"
+                maxLength={6}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                placeholder="000000"
+              />
+            </div>
             {error && <p className="text-sm text-critical">{error}</p>}
             <div className="flex gap-2">
-              <Button variant="secondary" size="sm" onClick={() => setShowDisableForm(false)}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setSetupData(null);
+                  setCode("");
+                  setError(null);
+                }}
+              >
                 Cancel
               </Button>
               <Button
                 size="sm"
-                style={{ backgroundColor: "#d03b3b" }}
-                className="text-white hover:opacity-90"
-                disabled={disable.isPending}
+                disabled={verifySetup.isPending || code.length !== 6}
                 onClick={() => {
                   setError(null);
-                  disable.mutate();
+                  verifySetup.mutate();
                 }}
               >
-                {disable.isPending ? "Disabling..." : "Disable 2FA"}
+                {verifySetup.isPending ? "Verifying..." : "Verify & enable"}
               </Button>
             </div>
           </div>
         ) : (
-          <Button variant="secondary" size="sm" onClick={() => setShowDisableForm(true)}>
-            <ShieldOff className="h-3.5 w-3.5" />
-            Disable two-factor authentication
+          <Button
+            size="sm"
+            disabled={startSetup.isPending}
+            onClick={() => {
+              setError(null);
+              startSetup.mutate();
+            }}
+          >
+            <ShieldCheck className="h-3.5 w-3.5" />
+            {startSetup.isPending ? "Starting..." : "Enable two-factor authentication"}
           </Button>
-        )
-      ) : setupData ? (
-        <div className="max-w-xs space-y-3">
-          <p className="text-xs text-neutral-500">
-            Scan this QR code with Google Authenticator, Authy, or a similar app, then enter the
-            6-digit code it generates.
-          </p>
-          <img
-            src={setupData.qrCode}
-            alt="Two-factor authentication QR code"
-            className="h-40 w-40 rounded-lg border border-neutral-200 dark:border-neutral-700"
-          />
-          <p className="break-all text-xs text-neutral-400">
-            Can't scan? Enter this key manually: <span className="font-mono">{setupData.secret}</span>
-          </p>
-          <div>
-            <label className={labelClass}>6-digit code</label>
-            <input
-              className={`${inputClass} text-center tracking-[0.4em]`}
-              inputMode="numeric"
-              maxLength={6}
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              placeholder="000000"
-            />
-          </div>
-          {error && <p className="text-sm text-critical">{error}</p>}
-          <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                setSetupData(null);
-                setCode("");
-                setError(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              disabled={verifySetup.isPending || code.length !== 6}
-              onClick={() => {
-                setError(null);
-                verifySetup.mutate();
-              }}
-            >
-              {verifySetup.isPending ? "Verifying..." : "Verify & enable"}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <Button
-          size="sm"
-          disabled={startSetup.isPending}
-          onClick={() => {
-            setError(null);
-            startSetup.mutate();
-          }}
-        >
-          <ShieldCheck className="h-3.5 w-3.5" />
-          {startSetup.isPending ? "Starting..." : "Enable two-factor authentication"}
-        </Button>
+        )}
+      </Card>
+
+      {recoveryCodes && (
+        <RecoveryCodesModal codes={recoveryCodes} onClose={() => setRecoveryCodes(null)} />
       )}
-    </Card>
+    </>
   );
 }
 
@@ -431,6 +543,98 @@ function NotificationsSection() {
   );
 }
 
+function ActiveSessionsSection() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const { data: sessions, isLoading } = useQuery({
+    queryKey: ["auth", "sessions"],
+    queryFn: api.auth.sessions.list,
+  });
+
+  const revoke = useMutation({
+    mutationFn: (id: string) => api.auth.sessions.revoke(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["auth", "sessions"] });
+      toast("Session signed out.");
+    },
+  });
+
+  const revokeOthers = useMutation({
+    mutationFn: () => api.auth.sessions.revokeOthers(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["auth", "sessions"] });
+      toast("Signed out of all other devices.");
+    },
+  });
+
+  const otherSessionsCount = (sessions ?? []).filter((s) => !s.current).length;
+
+  return (
+    <Card className="mb-6">
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <SectionHeader
+          title="Active sessions"
+          description="Devices and browsers currently signed in to your account."
+        />
+        {otherSessionsCount > 0 && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="shrink-0"
+            disabled={revokeOthers.isPending}
+            onClick={() => revokeOthers.mutate()}
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Sign out other devices
+          </Button>
+        )}
+      </div>
+
+      {isLoading ? (
+        <p className="text-sm text-neutral-400">Loading sessions...</p>
+      ) : (
+        <div className="space-y-2">
+          {sessions?.map((session) => (
+            <div
+              key={session.id}
+              className="flex items-center justify-between rounded-lg border border-neutral-100 px-3 py-2.5 dark:border-neutral-800"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+                  <Monitor className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="flex items-center gap-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                    {describeUserAgent(session.userAgent)}
+                    {session.current && (
+                      <span className="rounded-full bg-good/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-good">
+                        This device
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-xs text-neutral-400">
+                    Active {formatRelativeTime(session.lastActiveAt)}
+                  </p>
+                </div>
+              </div>
+              {!session.current && (
+                <button
+                  onClick={() => revoke.mutate(session.id)}
+                  className="rounded-md p-1.5 text-neutral-400 hover:bg-critical/10 hover:text-critical"
+                  aria-label="Sign out this device"
+                  title="Sign out this device"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 function DangerZoneSection() {
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -514,6 +718,91 @@ function DangerZoneSection() {
         >
           <RotateCcw className="h-3.5 w-3.5" />
           Reset all data
+        </Button>
+      )}
+    </Card>
+  );
+}
+
+function DeleteAccountSection() {
+  const { forgetSession } = useAuth();
+  const navigate = useNavigate();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const deleteAccount = useMutation({
+    mutationFn: () => api.auth.deleteAccount(password),
+    onSuccess: () => {
+      forgetSession();
+      navigate("/login", { replace: true });
+    },
+    onError: (err) => setError(err instanceof ApiError ? err.message : "Something went wrong."),
+  });
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    deleteAccount.mutate();
+  }
+
+  return (
+    <Card className="mb-6 border-critical/30">
+      <SectionHeader
+        title="Delete account"
+        description="Permanently delete your ExpenseTrac account and everything in it. This cannot be undone."
+      />
+
+      {showConfirm ? (
+        <form onSubmit={handleSubmit} className="max-w-xs space-y-3">
+          <p className="text-xs font-medium text-critical">
+            Your account, all expenses, income, categories, and settings will be permanently
+            deleted. You will be signed out immediately.
+          </p>
+          <div>
+            <label className={labelClass}>Confirm your password to delete</label>
+            <input
+              className={inputClass}
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoFocus
+            />
+          </div>
+          {error && <p className="text-sm text-critical">{error}</p>}
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setShowConfirm(false);
+                setPassword("");
+                setError(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              style={{ backgroundColor: "#d03b3b" }}
+              className="text-white hover:opacity-90"
+              disabled={deleteAccount.isPending || !password}
+            >
+              {deleteAccount.isPending ? "Deleting..." : "Permanently delete account"}
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <Button
+          size="sm"
+          style={{ backgroundColor: "#d03b3b" }}
+          className="text-white hover:opacity-90"
+          onClick={() => setShowConfirm(true)}
+        >
+          <UserX className="h-3.5 w-3.5" />
+          Delete account
         </Button>
       )}
     </Card>
@@ -705,12 +994,21 @@ export function SettingsPage() {
         </p>
       </div>
 
+      <GroupHeading>Account</GroupHeading>
       <AccountSection />
+
+      <GroupHeading>Security</GroupHeading>
       <TwoFactorSection />
+      <ActiveSessionsSection />
+
+      <GroupHeading>Preferences</GroupHeading>
       <AppearanceSection />
       <NotificationsSection />
       <CurrencySection />
+
+      <GroupHeading>Danger zone</GroupHeading>
       <DangerZoneSection />
+      <DeleteAccountSection />
     </div>
   );
 }

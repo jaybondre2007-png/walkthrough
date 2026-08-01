@@ -34,8 +34,9 @@ The Vite dev server proxies `/api` requests to the backend, so just open http://
 
 ## Features
 
-- **Authentication** — email/password accounts, JWT sessions via httpOnly cookies, per-user data isolation, change password
-- **Two-factor authentication** — TOTP-based 2FA (Google Authenticator, Authy, etc.) with QR-code setup and a code challenge at login
+- **Authentication** — email/password accounts, DB-tracked sessions via httpOnly cookies, per-user data isolation
+- **Two-factor authentication** — TOTP-based 2FA (Google Authenticator, Authy, etc.) with QR-code setup, one-time recovery codes for when you lose your device, and a code/recovery-code challenge at login
+- **Account security** — login rate-limiting with temporary lockout after repeated failed attempts, an active-sessions list showing every signed-in device with the ability to revoke any of them (or "sign out other devices" in one click), and permanent account deletion
 - **Dashboard** — quick-glance monthly overview: spend, budget remaining, top category, recent activity, and a proactive budget-pace alert banner
 - **Analytics** — a dedicated page with income vs. expense trends, net/savings-rate stat tiles, expense and income category breakdowns, and monthly spending trend
 - **Expenses** — add/edit/delete, search, filter by category, multi-currency entry with automatic conversion
@@ -43,7 +44,7 @@ The Vite dev server proxies `/api` requests to the backend, so just open http://
 - **Export** — download expenses or income as CSV (opens in Excel) or a formatted PDF report
 - **Categories** — separate expense and income categories, custom color/icon, monthly budgets with progress bars
 - **Budgets & alerts** — set an overall monthly budget; get an in-app warning when your spending pace is on track to exceed it before the month is up (configurable threshold)
-- **Settings** — account info, password, two-factor authentication, light/dark appearance, monthly budget, notification preferences, base currency, custom exchange rates
+- **Settings** — organized into Account, Security (password, 2FA, active sessions), Preferences (appearance, notifications, currency), and a Danger Zone (reset data, delete account)
 
 ## How the budget alert works
 
@@ -77,5 +78,7 @@ The banner shows on the Dashboard with the amount spent, projected month-end tot
 
 - Set a strong, random `JWT_SECRET` in `server/.env` before deploying anywhere beyond local dev.
 - Cookies are `httpOnly`/`sameSite=lax`; set `secure: true` in `server/src/auth.ts` once served over HTTPS.
-- Two-factor secrets are stored in the database in plaintext (standard practice for TOTP — the same approach used by most password managers); for a production deployment, consider encrypting `User.twoFactorSecret` at rest.
+- Sessions are tracked server-side (not just trusted as a signed JWT), so revoking a session from Settings → Active Sessions immediately invalidates that device's cookie on its next request.
+- Logins lock out for 15 minutes after 5 consecutive failed attempts, tracked per account.
+- Two-factor secrets and recovery codes are hashed/stored in the database (recovery codes are bcrypt-hashed, never stored in plaintext); for a production deployment, consider additionally encrypting `User.twoFactorSecret` at rest.
 - CSV/PDF export runs entirely client-side against your own data — no third-party services involved.

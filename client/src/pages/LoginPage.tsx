@@ -13,7 +13,9 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pendingToken, setPendingToken] = useState<string | null>(null);
+  const [useRecoveryCode, setUseRecoveryCode] = useState(false);
   const [code, setCode] = useState("");
+  const [recoveryCode, setRecoveryCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -41,7 +43,10 @@ export function LoginPage() {
     if (!pendingToken) return;
     setPending(true);
     try {
-      await completeTwoFactorLogin(pendingToken, code);
+      await completeTwoFactorLogin(
+        pendingToken,
+        useRecoveryCode ? { recoveryCode } : { code }
+      );
       navigate("/", { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
@@ -66,7 +71,9 @@ export function LoginPage() {
           </h1>
           <p className="mt-1 text-sm text-neutral-500">
             {pendingToken
-              ? "Enter the 6-digit code from your authenticator app."
+              ? useRecoveryCode
+                ? "Enter one of your unused recovery codes."
+                : "Enter the 6-digit code from your authenticator app."
               : "Sign in to continue tracking your spending."}
           </p>
         </div>
@@ -76,34 +83,68 @@ export function LoginPage() {
             onSubmit={handleVerifyCode}
             className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
           >
-            <div className="mb-5">
-              <label className={labelClass}>Authentication code</label>
-              <input
-                className={`${inputClass} text-center text-lg tracking-[0.5em]`}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength={6}
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                placeholder="000000"
-                autoFocus
-                required
-              />
-            </div>
+            {useRecoveryCode ? (
+              <div className="mb-5">
+                <label className={labelClass}>Recovery code</label>
+                <input
+                  className={`${inputClass} text-center text-lg tracking-widest`}
+                  autoComplete="one-time-code"
+                  value={recoveryCode}
+                  onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())}
+                  placeholder="XXXXX-XXXXX"
+                  autoFocus
+                  required
+                />
+              </div>
+            ) : (
+              <div className="mb-5">
+                <label className={labelClass}>Authentication code</label>
+                <input
+                  className={`${inputClass} text-center text-lg tracking-[0.5em]`}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="000000"
+                  autoFocus
+                  required
+                />
+              </div>
+            )}
 
             {error && <p className="mb-4 text-sm text-critical">{error}</p>}
 
-            <Button type="submit" className="w-full" disabled={pending || code.length !== 6}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={pending || (useRecoveryCode ? !recoveryCode : code.length !== 6)}
+            >
               {pending ? "Verifying..." : "Verify & sign in"}
             </Button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setUseRecoveryCode((v) => !v);
+                setError(null);
+                setCode("");
+                setRecoveryCode("");
+              }}
+              className="mt-3 w-full text-center text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+            >
+              {useRecoveryCode ? "Use my authenticator app instead" : "Use a recovery code instead"}
+            </button>
             <button
               type="button"
               onClick={() => {
                 setPendingToken(null);
                 setCode("");
+                setRecoveryCode("");
+                setUseRecoveryCode(false);
                 setError(null);
               }}
-              className="mt-3 w-full text-center text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+              className="mt-1 w-full text-center text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
             >
               Back to sign in
             </button>

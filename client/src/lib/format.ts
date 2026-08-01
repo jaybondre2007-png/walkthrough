@@ -32,3 +32,17 @@ export function getFirstName(user: { name?: string | null; email: string }): str
   const first = parts[0] || local;
   return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
 }
+
+export function formatRelativeTime(date: string | Date): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const diffMs = Date.now() - d.getTime();
+  const diffMin = Math.round(diffMs / 60_000);
+
+  if (diffMin < 1) return "Just now";
+  if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? "" : "s"} ago`;
+  const diffHr = Math.round(diffMin / 60);
+  if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? "" : "s"} ago`;
+  const diffDay = Math.round(diffHr / 24);
+  if (diffDay < 30) return `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
+  return formatDate(d);
+}

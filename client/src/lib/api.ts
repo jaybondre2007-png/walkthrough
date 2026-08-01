@@ -74,6 +74,15 @@ export interface AuthUser {
   email: string;
   name: string | null;
   twoFactorEnabled: boolean;
+  recoveryCodesRemaining?: number;
+}
+
+export interface Session {
+  id: string;
+  userAgent: string | null;
+  createdAt: string;
+  lastActiveAt: string;
+  current: boolean;
 }
 
 export type LoginResult = AuthUser | { requires2FA: true; pendingToken: string };
@@ -83,10 +92,10 @@ export const api = {
     me: () => request<AuthUser>("/auth/me"),
     login: (email: string, password: string) =>
       request<LoginResult>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
-    verify2faLogin: (pendingToken: string, code: string) =>
+    verify2faLogin: (pendingToken: string, codeOrRecovery: { code: string } | { recoveryCode: string }) =>
       request<AuthUser>("/auth/2fa/login-verify", {
         method: "POST",
-        body: JSON.stringify({ pendingToken, code }),
+        body: JSON.stringify({ pendingToken, ...codeOrRecovery }),
       }),
     register: (email: string, password: string, name?: string) =>
       request<AuthUser>("/auth/register", {
@@ -101,12 +110,24 @@ export const api = {
       }),
     setup2fa: () => request<{ secret: string; qrCode: string }>("/auth/2fa/setup", { method: "POST" }),
     verify2fa: (secret: string, code: string) =>
-      request<{ enabled: true }>("/auth/2fa/verify", {
+      request<{ enabled: true; recoveryCodes: string[] }>("/auth/2fa/verify", {
         method: "POST",
         body: JSON.stringify({ secret, code }),
       }),
     disable2fa: (password: string) =>
       request<void>("/auth/2fa/disable", { method: "POST", body: JSON.stringify({ password }) }),
+    regenerateRecoveryCodes: (password: string) =>
+      request<{ recoveryCodes: string[] }>("/auth/2fa/recovery-codes/regenerate", {
+        method: "POST",
+        body: JSON.stringify({ password }),
+      }),
+    sessions: {
+      list: () => request<Session[]>("/auth/sessions"),
+      revoke: (id: string) => request<void>(`/auth/sessions/${id}`, { method: "DELETE" }),
+      revokeOthers: () => request<void>("/auth/sessions/revoke-others", { method: "POST" }),
+    },
+    deleteAccount: (password: string) =>
+      request<void>("/auth/account", { method: "DELETE", body: JSON.stringify({ password }) }),
   },
   categories: {
     list: (kind?: CategoryKind) => request<Category[]>(`/categories${kind ? `?kind=${kind}` : ""}`),

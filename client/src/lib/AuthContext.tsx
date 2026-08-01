@@ -6,10 +6,16 @@ interface AuthContextValue {
   user: AuthUser | null;
   status: "loading" | "authenticated" | "unauthenticated";
   login: (email: string, password: string) => Promise<LoginResult>;
-  completeTwoFactorLogin: (pendingToken: string, code: string) => Promise<void>;
+  completeTwoFactorLogin: (
+    pendingToken: string,
+    codeOrRecovery: { code: string } | { recoveryCode: string }
+  ) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  /** Resets local auth state without calling the API — used after account
+   * deletion, where the server has already invalidated the session. */
+  forgetSession: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -52,8 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   const completeTwoFactorLogin = useCallback(
-    async (pendingToken: string, code: string) => {
-      const u = await api.auth.verify2faLogin(pendingToken, code);
+    async (pendingToken: string, codeOrRecovery: { code: string } | { recoveryCode: string }) => {
+      const u = await api.auth.verify2faLogin(pendingToken, codeOrRecovery);
       setUser(u);
       setStatus("authenticated");
       queryClient.clear();
@@ -83,9 +89,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(u);
   }, []);
 
+  const forgetSession = useCallback(() => {
+    setUser(null);
+    setStatus("unauthenticated");
+    queryClient.clear();
+  }, [queryClient]);
+
   return (
     <AuthContext.Provider
-      value={{ user, status, login, completeTwoFactorLogin, register, logout, refreshUser }}
+      value={{ user, status, login, completeTwoFactorLogin, register, logout, refreshUser, forgetSession }}
     >
       {children}
     </AuthContext.Provider>
