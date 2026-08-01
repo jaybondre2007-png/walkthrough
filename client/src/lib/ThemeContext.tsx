@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 
 type Theme = "light" | "dark";
 
-const STORAGE_KEY = "expensetrac-theme";
+const STORAGE_KEY = "walkthrough-theme";
 
 interface ThemeContextValue {
   theme: Theme;

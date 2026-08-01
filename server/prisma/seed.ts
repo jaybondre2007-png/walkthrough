@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-const DEMO_EMAIL = "demo@expensetrac.app";
+const DEMO_EMAIL = "demo@walkthrough.app";
 const DEMO_PASSWORD = "demo1234";
 
 const EXPENSE_CATEGORIES = [

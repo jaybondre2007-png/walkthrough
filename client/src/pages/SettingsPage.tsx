@@ -417,7 +417,7 @@ function AppearanceSection() {
 
   return (
     <Card className="mb-6">
-      <SectionHeader title="Appearance" description="Choose how ExpenseTrac looks on this device." />
+      <SectionHeader title="Appearance" description="Choose how WalkThrough looks on this device." />
       <div className="flex gap-3">
         {(
           [
@@ -750,7 +750,7 @@ function DeleteAccountSection() {
     <Card className="mb-6 border-critical/30">
       <SectionHeader
         title="Delete account"
-        description="Permanently delete your ExpenseTrac account and everything in it. This cannot be undone."
+        description="Permanently delete your WalkThrough account and everything in it. This cannot be undone."
       />
 
       {showConfirm ? (

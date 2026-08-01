@@ -1,12 +1,12 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: expensetrac-db
+    container_name: walkthrough-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: expensetrac
-      POSTGRES_PASSWORD: expensetrac
-      POSTGRES_DB: expensetrac
+      POSTGRES_USER: walkthrough
+      POSTGRES_PASSWORD: walkthrough
+      POSTGRES_DB: walkthrough
     ports:
       - "5432:5432"
     volumes:

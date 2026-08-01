@@ -284,7 +284,7 @@ router.post("/2fa/setup", async (req, res) => {
   if (user.twoFactorEnabled) return res.status(400).json({ error: "Two-factor authentication is already enabled" });
 
   const secret = authenticator.generateSecret();
-  const otpauthUrl = authenticator.keyuri(user.email, "ExpenseTrac", secret);
+  const otpauthUrl = authenticator.keyuri(user.email, "WalkThrough", secret);
   const qrCode = await QRCode.toDataURL(otpauthUrl);
 
   res.json({ secret, qrCode });

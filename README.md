@@ -1,4 +1,4 @@
-# ExpenseTrac
+# WalkThrough
 
 A professional personal finance tracker with authentication (including 2FA), income and expense tracking, budgets with proactive alerts, in-depth analytics, and data export.
 
@@ -30,7 +30,7 @@ npm run dev   # starts the app on http://localhost:5173
 
 The Vite dev server proxies `/api` requests to the backend, so just open http://localhost:5173.
 
-**Demo login** (after running `npm run seed`): `demo@expensetrac.app` / `demo1234` — or register your own account from the login screen.
+**Demo login** (after running `npm run seed`): `demo@walkthrough.app` / `demo1234` — or register your own account from the login screen.
 
 ## Features
 
@@ -49,7 +49,7 @@ The Vite dev server proxies `/api` requests to the backend, so just open http://
 
 ## How the budget alert works
 
-Set a **monthly budget** and an **alert threshold** (default 50%) in Settings. Each day, ExpenseTrac compares how much of your budget you've spent against how much of the month has elapsed:
+Set a **monthly budget** and an **alert threshold** (default 50%) in Settings. Each day, WalkThrough compares how much of your budget you've spent against how much of the month has elapsed:
 
 - **Warning** — you've spent more than the threshold, and that spend is outpacing the days elapsed (e.g., 60% of budget gone with only 40% of the month passed).
 - **Critical** — you've spent 100%+ of your budget already.
@@ -67,7 +67,7 @@ The banner shows on the Dashboard with the amount spent, projected month-end tot
    ```
 2. Point `DATABASE_URL` in `server/.env` at your Postgres instance, e.g.:
    ```
-   DATABASE_URL="postgresql://user:password@host:5432/expensetrac?schema=public"
+   DATABASE_URL="postgresql://user:password@host:5432/walkthrough?schema=public"
    ```
    A `docker-compose.yml` is included at the repo root if you want to run Postgres locally via Docker:
    ```bash

@@ -44,7 +44,7 @@ export function RegisterPage() {
             <Wallet className="h-6 w-6" strokeWidth={2.25} />
           </div>
           <h1 className="text-lg font-semibold text-neutral-900 dark:text-white">
-            Create your ExpenseTrac account
+            Create your WalkThrough account
           </h1>
           <p className="mt-1 text-sm text-neutral-500">
             Start tracking spending, budgets, and trends in minutes.

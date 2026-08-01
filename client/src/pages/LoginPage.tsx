@@ -67,7 +67,7 @@ export function LoginPage() {
             )}
           </div>
           <h1 className="text-lg font-semibold text-neutral-900 dark:text-white">
-            {pendingToken ? "Two-factor verification" : "Welcome back to ExpenseTrac"}
+            {pendingToken ? "Two-factor verification" : "Welcome back to WalkThrough"}
           </h1>
           <p className="mt-1 text-sm text-neutral-500">
             {pendingToken
@@ -196,7 +196,7 @@ export function LoginPage() {
             </p>
 
             <p className="mt-6 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-center text-xs text-neutral-400 dark:border-neutral-800 dark:bg-neutral-900">
-              Demo login: <span className="font-medium text-neutral-500 dark:text-neutral-300">demo@expensetrac.app</span> /{" "}
+              Demo login: <span className="font-medium text-neutral-500 dark:text-neutral-300">demo@walkthrough.app</span> /{" "}
               <span className="font-medium text-neutral-500 dark:text-neutral-300">demo1234</span>
             </p>
           </>

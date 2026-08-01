@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { prisma } from "./prisma";
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "dev-secret-change-me";
-const COOKIE_NAME = "expensetrac_token";
+const COOKIE_NAME = "walkthrough_token";
 const TOKEN_TTL = "30d";
 const PENDING_2FA_TTL = "5m";
 

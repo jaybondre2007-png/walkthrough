@@ -54,7 +54,7 @@ export function exportTransactionsToPdf(
   const total = items.reduce((sum, e) => sum + e.amountBase, 0);
 
   doc.setFontSize(16);
-  doc.text(`ExpenseTrac — ${title}`, 14, 18);
+  doc.text(`WalkThrough — ${title}`, 14, 18);
   doc.setFontSize(10);
   doc.setTextColor(120);
   doc.text(`Generated ${new Date().toLocaleDateString("en-US", { dateStyle: "long" })}`, 14, 25);

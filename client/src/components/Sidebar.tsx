@@ -46,7 +46,7 @@ export function Sidebar() {
         </div>
         <div>
           <p className="text-[15px] font-semibold leading-tight text-neutral-900 dark:text-white">
-            ExpenseTrac
+            WalkThrough
           </p>
           <p className="text-xs leading-tight text-neutral-400">Personal finance</p>
         </div>
