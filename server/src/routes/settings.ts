@@ -20,6 +20,7 @@ router.get("/", async (req, res) => {
 const settingsUpdateSchema = z.object({
   baseCurrency: z.string().length(3).optional(),
   monthlyBudget: z.number().positive().nullable().optional(),
+  budgetLabel: z.enum(["BUDGET", "GOAL"]).optional(),
   budgetAlertsEnabled: z.boolean().optional(),
   budgetAlertThreshold: z.number().int().min(1).max(100).optional(),
 });

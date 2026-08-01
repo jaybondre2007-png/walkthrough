@@ -2,12 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, OctagonAlert } from "lucide-react";
 import { api } from "../lib/api";
 import { formatMoney } from "../lib/format";
+import type { BudgetLabel } from "../lib/types";
 
 export function BudgetAlertBanner({
   baseCurrency,
+  label,
   onAdjust,
 }: {
   baseCurrency: string;
+  label: BudgetLabel;
   onAdjust: () => void;
 }) {
   const { data: alert } = useQuery({
@@ -19,6 +22,7 @@ export function BudgetAlertBanner({
 
   const isCritical = alert.severity === "critical";
   const Icon = isCritical ? OctagonAlert : AlertTriangle;
+  const noun = label === "GOAL" ? "goal" : "budget";
 
   return (
     <div
@@ -33,8 +37,8 @@ export function BudgetAlertBanner({
       <div className="flex-1 text-sm">
         <p className="font-medium">
           {isCritical
-            ? `You've exceeded your monthly goal of ${formatMoney(alert.monthlyBudget ?? 0, baseCurrency)}.`
-            : `You're on pace to exceed your monthly goal.`}
+            ? `You've exceeded your monthly ${noun} of ${formatMoney(alert.monthlyBudget ?? 0, baseCurrency)}.`
+            : `You're on pace to exceed your monthly ${noun}.`}
         </p>
         <p className="mt-0.5 text-xs opacity-90">
           Spent {formatMoney(alert.spent ?? 0, baseCurrency)} ({(alert.pctSpent ?? 0).toFixed(0)}%) with{" "}
@@ -48,7 +52,7 @@ export function BudgetAlertBanner({
         onClick={onAdjust}
         className="shrink-0 whitespace-nowrap text-xs font-medium underline underline-offset-2 opacity-90 hover:opacity-100"
       >
-        Adjust goal
+        Adjust {noun}
       </button>
     </div>
   );

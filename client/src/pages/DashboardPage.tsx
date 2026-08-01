@@ -44,6 +44,8 @@ export function DashboardPage() {
   });
 
   const base = summary?.baseCurrency ?? "USD";
+  const budgetLabel = settings?.budgetLabel ?? "BUDGET";
+  const noun = budgetLabel === "GOAL" ? "Goal" : "Budget";
 
   return (
     <div>
@@ -60,12 +62,13 @@ export function DashboardPage() {
         <div className="p-10 text-center text-sm text-neutral-400">Loading dashboard...</div>
       ) : (
         <>
-          <BudgetAlertBanner baseCurrency={base} onAdjust={() => setShowGoalModal(true)} />
+          <BudgetAlertBanner baseCurrency={base} label={budgetLabel} onAdjust={() => setShowGoalModal(true)} />
 
           <GoalCard
             monthlyBudget={settings?.monthlyBudget ?? null}
             spent={summary?.totalThisMonth ?? 0}
             baseCurrency={base}
+            label={budgetLabel}
             onEdit={() => setShowGoalModal(true)}
           />
 
@@ -77,16 +80,16 @@ export function DashboardPage() {
               icon={Wallet}
             />
             <StatTile
-              label="Budget remaining"
+              label={`${noun} remaining`}
               value={
                 summary?.budgetRemaining != null
                   ? formatMoney(summary.budgetRemaining, base)
-                  : "No budget set"
+                  : `No ${noun.toLowerCase()} set`
               }
               sublabel={
                 summary?.budgetRemaining != null
                   ? summary.budgetRemaining < 0
-                    ? "Over budget"
+                    ? `Over ${noun.toLowerCase()}`
                     : "On track"
                   : undefined
               }
@@ -108,9 +111,9 @@ export function DashboardPage() {
               icon={TrendingDown}
             />
             <StatTile
-              label="Total budget"
-              value={formatMoney(summary?.totalBudget ?? 0, base)}
-              sublabel="Across all categories"
+              label={`Total ${noun.toLowerCase()}`}
+              value={summary?.totalBudget ? formatMoney(summary.totalBudget, base) : `No ${noun.toLowerCase()} set`}
+              sublabel={`Your monthly ${noun.toLowerCase()}`}
               icon={ReceiptIcon}
             />
           </div>

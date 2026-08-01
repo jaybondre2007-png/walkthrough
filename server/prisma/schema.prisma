@@ -124,6 +124,7 @@ model Settings {
   user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   baseCurrency         String  @default("USD")
   monthlyBudget        Float?
+  budgetLabel          String  @default("BUDGET")
   budgetAlertsEnabled  Boolean @default(true)
   budgetAlertThreshold Int     @default(50)
 }

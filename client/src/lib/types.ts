@@ -1,4 +1,5 @@
 export type CategoryKind = "EXPENSE" | "INCOME";
+export type BudgetLabel = "BUDGET" | "GOAL";
 
 export interface Category {
   id: string;
@@ -51,12 +52,14 @@ export interface Settings {
   id: string;
   baseCurrency: string;
   monthlyBudget: number | null;
+  budgetLabel: BudgetLabel;
   budgetAlertsEnabled: boolean;
   budgetAlertThreshold: number;
 }
 
 export interface DashboardSummary {
   baseCurrency: string;
+  budgetLabel: BudgetLabel;
   totalThisMonth: number;
   totalBudget: number;
   budgetRemaining: number | null;

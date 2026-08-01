@@ -32,7 +32,11 @@ router.get("/summary", async (req: AuthedRequest, res) => {
   ]);
 
   const totalThisMonth = monthExpenses.reduce((sum, e) => sum + e.amountBase, 0);
-  const totalBudget = categories.reduce((sum, c) => sum + (c.budget ?? 0), 0);
+  // "Total budget" / "Budget remaining" mirror the same monthly budget/goal
+  // shown on the Goal card — previously this summed each category's own
+  // budget instead, a different number that had nothing to do with the goal
+  // the user actually set, which looked broken/inconsistent once they set one.
+  const totalBudget = settings.monthlyBudget ?? 0;
 
   const spentByCategory = new Map<string, number>();
   for (const e of monthExpenses) {
@@ -56,9 +60,10 @@ router.get("/summary", async (req: AuthedRequest, res) => {
 
   res.json({
     baseCurrency: settings.baseCurrency,
+    budgetLabel: settings.budgetLabel,
     totalThisMonth,
     totalBudget,
-    budgetRemaining: totalBudget > 0 ? totalBudget - totalThisMonth : null,
+    budgetRemaining: settings.monthlyBudget != null ? totalBudget - totalThisMonth : null,
     expenseCountThisMonth: monthExpenses.length,
     topCategory,
     recentExpenses,

@@ -1,6 +1,7 @@
 import type {
   AnalyticsSummary,
   BudgetAlert,
+  BudgetLabel,
   Category,
   CategoryBreakdown,
   CategoryKind,
@@ -65,6 +66,7 @@ export interface CategoryInput {
 export interface SettingsInput {
   baseCurrency?: string;
   monthlyBudget?: number | null;
+  budgetLabel?: BudgetLabel;
   budgetAlertsEnabled?: boolean;
   budgetAlertThreshold?: number;
 }
