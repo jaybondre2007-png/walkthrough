@@ -153,6 +153,8 @@ export const api = {
       request<Settings>("/settings", { method: "PUT", body: JSON.stringify(data) }),
     resetData: (password: string) =>
       request<void>("/settings/reset-data", { method: "POST", body: JSON.stringify({ password }) }),
+    liveRates: () =>
+      request<{ base: string; date: string; rates: Record<string, number> }>("/settings/live-rates"),
     rates: {
       list: () => request<ExchangeRate[]>("/settings/exchange-rates"),
       upsert: (currency: string, rateToBase: number) =>

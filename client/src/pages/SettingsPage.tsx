@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Moon, Sun, ShieldCheck, ShieldOff, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Moon, Sun, ShieldCheck, ShieldOff, RotateCcw, RefreshCw } from "lucide-react";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { api, ApiError } from "../lib/api";
@@ -413,7 +413,6 @@ function DangerZoneSection() {
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [password, setPassword] = useState("");
-  const [confirmText, setConfirmText] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const resetData = useMutation({
@@ -422,7 +421,6 @@ function DangerZoneSection() {
       qc.invalidateQueries();
       setShowConfirm(false);
       setPassword("");
-      setConfirmText("");
       toast("All your data has been reset. Starting fresh!");
       navigate("/");
     },
@@ -432,9 +430,6 @@ function DangerZoneSection() {
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (confirmText.trim().toUpperCase() !== "RESET") {
-      return setError('Type "RESET" to confirm.');
-    }
     resetData.mutate();
   }
 
@@ -451,23 +446,13 @@ function DangerZoneSection() {
             This cannot be undone. All expenses and income entries will be permanently deleted.
           </p>
           <div>
-            <label className={labelClass}>Confirm your password</label>
+            <label className={labelClass}>Confirm your password to reset</label>
             <input
               className={inputClass}
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>
-              Type <span className="font-mono">RESET</span> to confirm
-            </label>
-            <input
-              className={inputClass}
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
-              placeholder="RESET"
+              autoFocus
             />
           </div>
           {error && <p className="text-sm text-critical">{error}</p>}
@@ -479,7 +464,6 @@ function DangerZoneSection() {
               onClick={() => {
                 setShowConfirm(false);
                 setPassword("");
-                setConfirmText("");
                 setError(null);
               }}
             >
@@ -490,7 +474,7 @@ function DangerZoneSection() {
               size="sm"
               style={{ backgroundColor: "#d03b3b" }}
               className="text-white hover:opacity-90"
-              disabled={resetData.isPending || !password || confirmText.trim().toUpperCase() !== "RESET"}
+              disabled={resetData.isPending || !password}
             >
               {resetData.isPending ? "Resetting..." : "Permanently reset data"}
             </Button>
@@ -546,6 +530,24 @@ function CurrencySection() {
     },
   });
 
+  const updateFromLive = useMutation({
+    mutationFn: async () => {
+      const live = await api.settings.liveRates();
+      await Promise.all(
+        Object.entries(live.rates).map(([currency, rateToBase]) =>
+          api.settings.rates.upsert(currency, rateToBase)
+        )
+      );
+      return live;
+    },
+    onSuccess: (live) => {
+      qc.invalidateQueries({ queryKey: ["settings", "rates"] });
+      toast(`Exchange rates updated to live rates as of ${live.date}.`);
+    },
+    onError: (err) =>
+      toast(err instanceof ApiError ? err.message : "Couldn't fetch live rates.", "error"),
+  });
+
   const [newCurrency, setNewCurrency] = useState("");
   const [newRate, setNewRate] = useState("");
   const [rateError, setRateError] = useState<string | null>(null);
@@ -590,10 +592,22 @@ function CurrencySection() {
       </Card>
 
       <Card className="mb-6">
-        <SectionHeader
-          title="Exchange rates"
-          description={`1 unit of currency = this many units of your base currency (${settings?.baseCurrency ?? "USD"}).`}
-        />
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <SectionHeader
+            title="Exchange rates"
+            description={`1 unit of currency = this many units of your base currency (${settings?.baseCurrency ?? "USD"}). We provide up-to-date rates by default — you can still override any rate manually below.`}
+          />
+          <Button
+            variant="secondary"
+            size="sm"
+            className="shrink-0"
+            disabled={updateFromLive.isPending}
+            onClick={() => updateFromLive.mutate()}
+          >
+            <RefreshCw className={updateFromLive.isPending ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
+            {updateFromLive.isPending ? "Updating..." : "Update to live rates"}
+          </Button>
+        </div>
 
         <div className="mb-4 space-y-2">
           {rates?.length ? (

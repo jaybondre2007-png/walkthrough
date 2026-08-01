@@ -71,6 +71,42 @@ router.delete("/exchange-rates/:currency", async (req, res) => {
   res.status(204).send();
 });
 
+const SUPPORTED_CURRENCIES = ["USD", "EUR", "GBP", "INR", "JPY", "CAD", "AUD"];
+
+router.get("/live-rates", async (req, res) => {
+  const userId = uid(req);
+  const settings = await prisma.settings.upsert({
+    where: { userId },
+    update: {},
+    create: { userId },
+  });
+  const base = settings.baseCurrency;
+  const symbols = SUPPORTED_CURRENCIES.filter((c) => c !== base);
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const upstream = await fetch(
+      `https://api.frankfurter.dev/v1/latest?base=${base}&symbols=${symbols.join(",")}`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timeout);
+
+    if (!upstream.ok) throw new Error(`Upstream responded ${upstream.status}`);
+    const data = (await upstream.json()) as { date: string; rates: Record<string, number> };
+
+    // Upstream gives "1 base = X currency"; we store "1 currency = X base", so invert.
+    const rates: Record<string, number> = {};
+    for (const [currency, rate] of Object.entries(data.rates)) {
+      if (rate > 0) rates[currency] = Math.round((1 / rate) * 1e6) / 1e6;
+    }
+
+    res.json({ base, date: data.date, rates });
+  } catch {
+    res.status(502).json({ error: "Couldn't reach the exchange rate provider. Please try again shortly." });
+  }
+});
+
 router.post("/reset-data", async (req, res) => {
   const parsed = z.object({ password: z.string().min(1) }).safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
