@@ -3,6 +3,8 @@ import { Plus, Pencil, Trash2, Pause, Play, Repeat } from "lucide-react";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { RecurringFormModal } from "../components/RecurringFormModal";
+import { EmptyState } from "../components/EmptyState";
+import { TableSkeleton } from "../components/Skeleton";
 import { useDeleteRecurring, useRecurring, useUpdateRecurring } from "../hooks/useRecurring";
 import { formatDate, formatMoney } from "../lib/format";
 import { getIcon } from "../lib/icons";
@@ -43,12 +45,13 @@ export function RecurringPage() {
 
       <Card padded={false} className="overflow-hidden">
         {isLoading ? (
-          <div className="p-10 text-center text-sm text-neutral-400">Loading recurring entries...</div>
+          <TableSkeleton rows={5} columns={5} />
         ) : !rules || rules.length === 0 ? (
-          <div className="p-10 text-center text-sm text-neutral-400">
-            No recurring entries yet. Add rent, a subscription, or your salary to stop re-entering
-            it every month.
-          </div>
+          <EmptyState
+            icon={Repeat}
+            title="No recurring entries yet"
+            description="Add rent, a subscription, or your salary to stop re-entering it every month."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

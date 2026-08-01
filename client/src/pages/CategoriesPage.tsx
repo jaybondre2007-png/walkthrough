@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Shapes } from "lucide-react";
 import clsx from "clsx";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { CategoryFormModal } from "../components/CategoryFormModal";
+import { EmptyState } from "../components/EmptyState";
+import { CardGridSkeleton } from "../components/Skeleton";
 import { useCategories, useDeleteCategory } from "../hooks/useCategories";
 import { api } from "../lib/api";
 import { formatMoney } from "../lib/format";
@@ -71,7 +73,13 @@ export function CategoriesPage() {
       </div>
 
       {isLoading ? (
-        <div className="p-10 text-center text-sm text-neutral-400">Loading categories...</div>
+        <CardGridSkeleton count={6} />
+      ) : !categories || categories.length === 0 ? (
+        <EmptyState
+          icon={Shapes}
+          title={`No ${kind === "INCOME" ? "income " : ""}categories yet`}
+          description="Create one to start organizing your transactions."
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {categories?.map((category) => {

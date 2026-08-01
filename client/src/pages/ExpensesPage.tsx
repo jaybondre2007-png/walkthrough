@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, Pencil, Trash2, Download, FileSpreadsheet, FileText, Repeat } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Download, FileSpreadsheet, FileText, Repeat, Receipt } from "lucide-react";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { DropdownMenu, DropdownItem } from "../components/DropdownMenu";
 import { ExpenseFormModal } from "../components/ExpenseFormModal";
+import { EmptyState } from "../components/EmptyState";
+import { TableSkeleton } from "../components/Skeleton";
 import { useCategories } from "../hooks/useCategories";
 import { useDeleteExpense, useExpenses } from "../hooks/useExpenses";
 import { api } from "../lib/api";
@@ -113,11 +115,13 @@ export function ExpensesPage() {
         </div>
 
         {isLoading ? (
-          <div className="p-10 text-center text-sm text-neutral-400">Loading expenses...</div>
+          <TableSkeleton rows={5} columns={4} />
         ) : !expenses || expenses.length === 0 ? (
-          <div className="p-10 text-center text-sm text-neutral-400">
-            No expenses found. Add your first one to get started.
-          </div>
+          <EmptyState
+            icon={Receipt}
+            title="No expenses found"
+            description="Add your first one to get started."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

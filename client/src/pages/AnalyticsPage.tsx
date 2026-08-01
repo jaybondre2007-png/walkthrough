@@ -13,9 +13,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { TrendingUp, TrendingDown, Wallet, PiggyBank } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, PiggyBank, BarChart3, PieChart as PieChartIcon } from "lucide-react";
 import { Card } from "../components/Card";
 import { StatTile } from "../components/StatTile";
+import { StatTileGridSkeleton, ChartCardSkeleton } from "../components/Skeleton";
 import { api } from "../lib/api";
 import { formatMoney } from "../lib/format";
 
@@ -58,7 +59,17 @@ export function AnalyticsPage() {
       </div>
 
       {isLoading ? (
-        <div className="p-10 text-center text-sm text-neutral-400">Loading analytics...</div>
+        <>
+          <StatTileGridSkeleton />
+          <div className="mb-6">
+            <ChartCardSkeleton height={280} />
+          </div>
+          <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <ChartCardSkeleton height={200} />
+            <ChartCardSkeleton height={200} />
+          </div>
+          <ChartCardSkeleton height={240} />
+        </>
       ) : (
         <>
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -138,7 +149,7 @@ export function AnalyticsPage() {
                 </ComposedChart>
               </ResponsiveContainer>
             ) : (
-              <EmptyChart label="No income or expense data yet" height={280} />
+              <EmptyChart label="No income or expense data yet" height={280} icon={BarChart3} />
             )}
           </Card>
 
@@ -184,7 +195,7 @@ export function AnalyticsPage() {
                   </div>
                 </>
               ) : (
-                <EmptyChart label="No spending data yet" height={200} />
+                <EmptyChart label="No spending data yet" height={200} icon={PieChartIcon} />
               )}
             </Card>
 
@@ -229,7 +240,7 @@ export function AnalyticsPage() {
                   </div>
                 </>
               ) : (
-                <EmptyChart label="No income data yet" height={200} />
+                <EmptyChart label="No income data yet" height={200} icon={PieChartIcon} />
               )}
             </Card>
           </div>
@@ -266,7 +277,7 @@ export function AnalyticsPage() {
                 </ComposedChart>
               </ResponsiveContainer>
             ) : (
-              <EmptyChart label="No spending data yet" height={240} />
+              <EmptyChart label="No spending data yet" height={240} icon={BarChart3} />
             )}
           </Card>
         </>
@@ -275,9 +286,21 @@ export function AnalyticsPage() {
   );
 }
 
-function EmptyChart({ label, height }: { label: string; height: number }) {
+function EmptyChart({
+  label,
+  height,
+  icon: Icon,
+}: {
+  label: string;
+  height: number;
+  icon: typeof BarChart3;
+}) {
   return (
-    <div className="flex items-center justify-center text-sm text-neutral-400" style={{ height }}>
+    <div
+      className="flex flex-col items-center justify-center gap-2 text-sm text-neutral-400"
+      style={{ height }}
+    >
+      <Icon className="h-6 w-6 text-neutral-300 dark:text-neutral-700" />
       {label}
     </div>
   );

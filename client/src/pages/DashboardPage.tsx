@@ -12,12 +12,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Wallet, TrendingDown, PiggyBank, Receipt as ReceiptIcon } from "lucide-react";
+import { Wallet, TrendingDown, PiggyBank, Receipt as ReceiptIcon, BarChart3, PieChart as PieChartIcon } from "lucide-react";
 import { Card } from "../components/Card";
 import { StatTile } from "../components/StatTile";
 import { BudgetAlertBanner } from "../components/BudgetAlertBanner";
 import { GoalCard } from "../components/GoalCard";
 import { GoalFormModal } from "../components/GoalFormModal";
+import { EmptyState } from "../components/EmptyState";
+import { Skeleton, StatTileGridSkeleton, ChartCardSkeleton, ListSkeleton } from "../components/Skeleton";
 import { api } from "../lib/api";
 import { formatDate, formatMoney, getFirstName } from "../lib/format";
 import { getIcon } from "../lib/icons";
@@ -59,7 +61,31 @@ export function DashboardPage() {
       </div>
 
       {isLoading ? (
-        <div className="p-10 text-center text-sm text-neutral-400">Loading dashboard...</div>
+        <>
+          <Card className="mb-6">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="mt-4 h-2.5 w-full rounded-full" />
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-8 w-24" />
+            </div>
+          </Card>
+          <StatTileGridSkeleton />
+          <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-5">
+            <div className="lg:col-span-3">
+              <ChartCardSkeleton height={260} />
+            </div>
+            <div className="lg:col-span-2">
+              <ChartCardSkeleton height={200} />
+            </div>
+          </div>
+          <Card padded={false}>
+            <div className="border-b border-neutral-200 px-6 py-4 dark:border-neutral-800">
+              <Skeleton className="h-4 w-32" />
+            </div>
+            <ListSkeleton rows={4} />
+          </Card>
+        </>
       ) : (
         <>
           <BudgetAlertBanner baseCurrency={base} label={budgetLabel} onAdjust={() => setShowGoalModal(true)} />
@@ -151,7 +177,7 @@ export function DashboardPage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <EmptyChart label="No spending data yet" height={260} />
+                <EmptyChart label="No spending data yet" height={260} icon={BarChart3} />
               )}
             </Card>
 
@@ -196,7 +222,7 @@ export function DashboardPage() {
                   </div>
                 </>
               ) : (
-                <EmptyChart label="No spending data yet" height={200} />
+                <EmptyChart label="No spending data yet" height={200} icon={PieChartIcon} />
               )}
             </Card>
           </div>
@@ -243,9 +269,11 @@ export function DashboardPage() {
                 })}
               </div>
             ) : (
-              <div className="px-6 py-10 text-center text-sm text-neutral-400">
-                No expenses yet. Head to the Expenses page to add your first one.
-              </div>
+              <EmptyState
+                icon={ReceiptIcon}
+                title="No expenses yet"
+                description="Head to the Expenses page to add your first one."
+              />
             )}
           </Card>
         </>
@@ -256,9 +284,21 @@ export function DashboardPage() {
   );
 }
 
-function EmptyChart({ label, height }: { label: string; height: number }) {
+function EmptyChart({
+  label,
+  height,
+  icon,
+}: {
+  label: string;
+  height: number;
+  icon: typeof BarChart3;
+}) {
   return (
-    <div className="flex items-center justify-center text-sm text-neutral-400" style={{ height }}>
+    <div className="flex flex-col items-center justify-center gap-2 text-sm text-neutral-400" style={{ height }}>
+      {(() => {
+        const Icon = icon;
+        return <Icon className="h-6 w-6 text-neutral-300 dark:text-neutral-700" />;
+      })()}
       {label}
     </div>
   );

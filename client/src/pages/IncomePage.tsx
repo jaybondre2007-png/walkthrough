@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, Pencil, Trash2, Download, FileSpreadsheet, FileText, Repeat } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Download, FileSpreadsheet, FileText, Repeat, Wallet } from "lucide-react";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { DropdownMenu, DropdownItem } from "../components/DropdownMenu";
 import { IncomeFormModal } from "../components/IncomeFormModal";
+import { EmptyState } from "../components/EmptyState";
+import { TableSkeleton } from "../components/Skeleton";
 import { useCategories } from "../hooks/useCategories";
 import { useDeleteIncome, useIncome } from "../hooks/useIncome";
 import { api } from "../lib/api";
@@ -110,11 +112,13 @@ export function IncomePage() {
         </div>
 
         {isLoading ? (
-          <div className="p-10 text-center text-sm text-neutral-400">Loading income...</div>
+          <TableSkeleton rows={5} columns={4} />
         ) : !incomes || incomes.length === 0 ? (
-          <div className="p-10 text-center text-sm text-neutral-400">
-            No income found. Add your first entry to get started.
-          </div>
+          <EmptyState
+            icon={Wallet}
+            title="No income found"
+            description="Add your first entry to get started."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

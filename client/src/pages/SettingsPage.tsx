@@ -18,6 +18,7 @@ import {
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { RecoveryCodesModal } from "../components/RecoveryCodesModal";
+import { Skeleton } from "../components/Skeleton";
 import { api, ApiError } from "../lib/api";
 import { inputClass, labelClass } from "../lib/styles";
 import { CURRENCIES } from "../lib/currencies";
@@ -591,7 +592,20 @@ function ActiveSessionsSection() {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-neutral-400">Loading sessions...</p>
+        <div className="space-y-2">
+          {Array.from({ length: 2 }, (_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 rounded-lg border border-neutral-100 px-3 py-2.5 dark:border-neutral-800"
+            >
+              <Skeleton className="h-8 w-8 shrink-0 rounded-lg" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-3.5 w-1/3" />
+                <Skeleton className="h-3 w-1/4" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="space-y-2">
           {sessions?.map((session) => (
