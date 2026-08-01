@@ -402,10 +402,8 @@ function NotificationsSection() {
           )}
         >
           <span
-            className={clsx(
-              "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
-              alertsEnabled ? "translate-x-[22px]" : "translate-x-0.5"
-            )}
+            className="absolute h-5 w-5 rounded-full bg-white shadow transition-transform"
+            style={{ top: "2px", left: "2px", transform: alertsEnabled ? "translateX(20px)" : "translateX(0)" }}
           />
         </button>
       </div>
