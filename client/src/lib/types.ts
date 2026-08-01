@@ -23,6 +23,7 @@ export interface Expense {
   notes: string | null;
   categoryId: string;
   category: Category;
+  recurringId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,6 +38,27 @@ export interface Income {
   notes: string | null;
   categoryId: string;
   category: Category;
+  recurringId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type RecurringFrequency = "WEEKLY" | "MONTHLY" | "YEARLY";
+
+export interface RecurringTransaction {
+  id: string;
+  kind: CategoryKind;
+  description: string;
+  amount: number;
+  currency: string;
+  categoryId: string;
+  category: Category;
+  frequency: RecurringFrequency;
+  startDate: string;
+  nextRunDate: string;
+  endDate: string | null;
+  active: boolean;
+  notes: string | null;
   createdAt: string;
   updatedAt: string;
 }

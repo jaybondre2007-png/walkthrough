@@ -11,6 +11,8 @@ import type {
   Income,
   IncomeBreakdown,
   IncomeVsExpensePoint,
+  RecurringFrequency,
+  RecurringTransaction,
   Settings,
   TrendPoint,
 } from "./types";
@@ -69,6 +71,29 @@ export interface SettingsInput {
   budgetLabel?: BudgetLabel;
   budgetAlertsEnabled?: boolean;
   budgetAlertThreshold?: number;
+}
+
+export interface RecurringInput {
+  kind: CategoryKind;
+  description: string;
+  amount: number;
+  currency: string;
+  categoryId: string;
+  frequency: RecurringFrequency;
+  startDate: string;
+  endDate?: string | null;
+  notes?: string | null;
+}
+
+export interface RecurringUpdateInput {
+  description?: string;
+  amount?: number;
+  currency?: string;
+  categoryId?: string;
+  frequency?: RecurringFrequency;
+  endDate?: string | null;
+  active?: boolean;
+  notes?: string | null;
 }
 
 export interface AuthUser {
@@ -212,5 +237,17 @@ export const api = {
       const query = qs.toString();
       return request<IncomeBreakdown[]>(`/analytics/income-by-category${query ? `?${query}` : ""}`);
     },
+  },
+  recurring: {
+    list: () => request<RecurringTransaction[]>("/recurring"),
+    create: (data: RecurringInput) =>
+      request<{ rule: RecurringTransaction; generated: number }>("/recurring", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: RecurringUpdateInput) =>
+      request<RecurringTransaction>(`/recurring/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    remove: (id: string) => request<void>(`/recurring/${id}`, { method: "DELETE" }),
+    process: () => request<{ generated: number }>("/recurring/process", { method: "POST" }),
   },
 };

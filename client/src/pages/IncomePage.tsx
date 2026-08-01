@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, Pencil, Trash2, Download, FileSpreadsheet, FileText } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Download, FileSpreadsheet, FileText, Repeat } from "lucide-react";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { DropdownMenu, DropdownItem } from "../components/DropdownMenu";
@@ -136,8 +136,13 @@ export function IncomePage() {
                       className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50 dark:border-neutral-900 dark:hover:bg-neutral-900/60"
                     >
                       <td className="px-4 py-3">
-                        <p className="font-medium text-neutral-900 dark:text-white">
+                        <p className="flex items-center gap-1.5 font-medium text-neutral-900 dark:text-white">
                           {income.description}
+                          {income.recurringId && (
+                            <span title="Recurring entry">
+                              <Repeat className="h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />
+                            </span>
+                          )}
                         </p>
                         {income.notes && (
                           <p className="mt-0.5 text-xs text-neutral-400">{income.notes}</p>

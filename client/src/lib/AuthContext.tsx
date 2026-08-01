@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { api, type AuthUser, type LoginResult } from "./api";
 
 interface AuthContextValue {
@@ -20,6 +20,24 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+/** Generates any due occurrences of the user's recurring expenses/income
+ * (rent, subscriptions, salary, etc.) — run once per session start so
+ * they show up without the user having to do anything. */
+function catchUpRecurring(queryClient: QueryClient) {
+  api.recurring
+    .process()
+    .then(({ generated }) => {
+      if (generated > 0) {
+        queryClient.invalidateQueries({ queryKey: ["expenses"] });
+        queryClient.invalidateQueries({ queryKey: ["income"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        queryClient.invalidateQueries({ queryKey: ["analytics"] });
+        queryClient.invalidateQueries({ queryKey: ["recurring"] });
+      }
+    })
+    .catch(() => {});
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [status, setStatus] = useState<AuthContextValue["status"]>("loading");
@@ -31,10 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((u) => {
         setUser(u);
         setStatus("authenticated");
+        catchUpRecurring(queryClient);
       })
       .catch(() => {
         setStatus("unauthenticated");
       });
+    // Only ever runs once on mount — deps intentionally omitted.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -53,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(result);
       setStatus("authenticated");
       queryClient.clear();
+      catchUpRecurring(queryClient);
     }
     return result;
   }, [queryClient]);
@@ -63,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(u);
       setStatus("authenticated");
       queryClient.clear();
+      catchUpRecurring(queryClient);
     },
     [queryClient]
   );

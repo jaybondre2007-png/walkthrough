@@ -26,6 +26,7 @@ model User {
   settings      Settings?
   sessions      Session[]
   recoveryCodes RecoveryCode[]
+  recurring     RecurringTransaction[]
 }
 
 model Session {
@@ -40,47 +41,50 @@ model Session {
 }
 
 model RecoveryCode {
-  id       String    @id @default(cuid())
-  userId   String
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  codeHash String
-  usedAt   DateTime?
-  createdAt DateTime @default(now())
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 
   @@index([userId])
 }
 
 model Category {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String
-  kind        String    @default("EXPENSE")
-  color       String    @default("#6366f1")
-  icon        String    @default("Tag")
-  budget      Float?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  expenses    Expense[]
-  incomes     Income[]
+  id        String                 @id @default(cuid())
+  userId    String
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  kind      String                 @default("EXPENSE")
+  color     String                 @default("#6366f1")
+  icon      String                 @default("Tag")
+  budget    Float?
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  expenses  Expense[]
+  incomes   Income[]
+  recurring RecurringTransaction[]
 
   @@unique([userId, name, kind])
 }
 
 model Expense {
-  id          String    @id @default(cuid())
+  id          String                @id @default(cuid())
   userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   description String
   amount      Float
-  currency    String    @default("USD")
+  currency    String                @default("USD")
   amountBase  Float
-  date        DateTime  @default(now())
+  date        DateTime              @default(now())
   notes       String?
   categoryId  String
-  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  category    Category              @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  recurringId String?
+  recurring   RecurringTransaction? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
 
   @@index([date])
   @@index([categoryId])
@@ -88,23 +92,51 @@ model Expense {
 }
 
 model Income {
-  id          String    @id @default(cuid())
+  id          String                @id @default(cuid())
   userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   description String
   amount      Float
-  currency    String    @default("USD")
+  currency    String                @default("USD")
   amountBase  Float
-  date        DateTime  @default(now())
+  date        DateTime              @default(now())
   notes       String?
   categoryId  String
-  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  category    Category              @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  recurringId String?
+  recurring   RecurringTransaction? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
 
   @@index([date])
   @@index([categoryId])
   @@index([userId])
+}
+
+model RecurringTransaction {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind        String // "EXPENSE" | "INCOME"
+  description String
+  amount      Float
+  currency    String    @default("USD")
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  frequency   String // "WEEKLY" | "MONTHLY" | "YEARLY"
+  startDate   DateTime
+  nextRunDate DateTime
+  endDate     DateTime?
+  active      Boolean   @default(true)
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  expenses Expense[]
+  incomes  Income[]
+
+  @@index([userId])
+  @@index([nextRunDate])
 }
 
 model ExchangeRate {

@@ -5,6 +5,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { ExpensesPage } from "./pages/ExpensesPage";
 import { IncomePage } from "./pages/IncomePage";
+import { RecurringPage } from "./pages/RecurringPage";
 import { CategoriesPage } from "./pages/CategoriesPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -22,6 +23,7 @@ function AppShell() {
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/expenses" element={<ExpensesPage />} />
             <Route path="/income" element={<IncomePage />} />
+            <Route path="/recurring" element={<RecurringPage />} />
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />

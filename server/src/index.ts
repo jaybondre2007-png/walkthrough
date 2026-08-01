@@ -9,6 +9,7 @@ import incomeRouter from "./routes/income";
 import settingsRouter from "./routes/settings";
 import dashboardRouter from "./routes/dashboard";
 import analyticsRouter from "./routes/analytics";
+import recurringRouter from "./routes/recurring";
 
 const app = express();
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;
@@ -27,6 +28,7 @@ app.use("/api/income", incomeRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/analytics", analyticsRouter);
+app.use("/api/recurring", recurringRouter);
 
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err);

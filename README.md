@@ -41,6 +41,7 @@ The Vite dev server proxies `/api` requests to the backend, so just open http://
 - **Analytics** — a dedicated page with income vs. expense trends, net/savings-rate stat tiles, expense and income category breakdowns, and monthly spending trend
 - **Expenses** — add/edit/delete, search, filter by category, multi-currency entry with automatic conversion
 - **Income** — track salary, business, freelance, investment, pocket money, gifts, and other income by category
+- **Recurring transactions** — mark rent, subscriptions, salary, etc. as weekly/monthly/yearly; new occurrences generate automatically (including catching up on any missed while the app wasn't open), with pause/resume and a full history
 - **Export** — download expenses or income as CSV (opens in Excel) or a formatted PDF report
 - **Categories** — separate expense and income categories, custom color/icon, monthly budgets with progress bars
 - **Budgets & alerts** — set an overall monthly budget; get an in-app warning when your spending pace is on track to exceed it before the month is up (configurable threshold)

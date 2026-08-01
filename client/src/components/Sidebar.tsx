@@ -10,6 +10,7 @@ import {
   LogOut,
   BarChart3,
   PiggyBank,
+  Repeat,
 } from "lucide-react";
 import clsx from "clsx";
 import { useAuth } from "../lib/AuthContext";
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { to: "/analytics", label: "Analytics", icon: BarChart3, end: false },
   { to: "/expenses", label: "Expenses", icon: Receipt, end: false },
   { to: "/income", label: "Income", icon: PiggyBank, end: false },
+  { to: "/recurring", label: "Recurring", icon: Repeat, end: false },
   { to: "/categories", label: "Categories", icon: Tags, end: false },
   { to: "/settings", label: "Settings", icon: Settings, end: false },
 ];
