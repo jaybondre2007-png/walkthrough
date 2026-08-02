@@ -78,8 +78,10 @@ The banner shows on the Dashboard with the amount spent, projected month-end tot
 ## Security notes
 
 - Set a strong, random `JWT_SECRET` in `server/.env` before deploying anywhere beyond local dev.
-- Cookies are `httpOnly`/`sameSite=lax`; set `secure: true` in `server/src/auth.ts` once served over HTTPS.
+- Cookies are `httpOnly`/`sameSite=lax`, and automatically marked `secure` (HTTPS-only) when `NODE_ENV=production`.
 - Sessions are tracked server-side (not just trusted as a signed JWT), so revoking a session from Settings → Active Sessions immediately invalidates that device's cookie on its next request.
 - Logins lock out for 15 minutes after 5 consecutive failed attempts, tracked per account.
-- Two-factor secrets and recovery codes are hashed/stored in the database (recovery codes are bcrypt-hashed, never stored in plaintext); for a production deployment, consider additionally encrypting `User.twoFactorSecret` at rest.
+- Two-factor recovery codes are bcrypt-hashed, never stored in plaintext. The TOTP secret itself (`User.twoFactorSecret`) is encrypted at rest with AES-256-GCM, keyed off `JWT_SECRET`.
+- `helmet` sets standard security headers (clickjacking/MIME-sniffing/HSTS protection, etc.); Content-Security-Policy is intentionally left off since the UI relies on inline `style` attributes for per-category theming.
+- All `/api` routes are rate-limited (300 requests/15 min per IP) in addition to the per-account login lockout, and JSON request bodies are capped at 100kb.
 - CSV/PDF export runs entirely client-side against your own data — no third-party services involved.

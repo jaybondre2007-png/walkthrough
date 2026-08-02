@@ -5,6 +5,7 @@ import { authenticator } from "otplib";
 import QRCode from "qrcode";
 import { z } from "zod";
 import { prisma } from "../prisma";
+import { encrypt, decrypt } from "../crypto";
 import {
   clearAuthCookie,
   createSession,
@@ -162,7 +163,7 @@ router.post("/2fa/login-verify", async (req, res) => {
     if (!match) return res.status(400).json({ error: "Invalid or already-used recovery code" });
     await prisma.recoveryCode.update({ where: { id: match.id }, data: { usedAt: new Date() } });
   } else {
-    const valid = authenticator.verify({ token: parsed.data.code!, secret: user.twoFactorSecret });
+    const valid = authenticator.verify({ token: parsed.data.code!, secret: decrypt(user.twoFactorSecret) });
     if (!valid) return res.status(400).json({ error: "Invalid or expired code" });
   }
 
@@ -304,7 +305,7 @@ router.post("/2fa/verify", async (req, res) => {
   await prisma.$transaction([
     prisma.user.update({
       where: { id: userId },
-      data: { twoFactorEnabled: true, twoFactorSecret: parsed.data.secret },
+      data: { twoFactorEnabled: true, twoFactorSecret: encrypt(parsed.data.secret) },
     }),
     prisma.recoveryCode.deleteMany({ where: { userId } }),
     prisma.recoveryCode.createMany({
