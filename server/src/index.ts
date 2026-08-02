@@ -19,6 +19,12 @@ const port = process.env.PORT ? Number(process.env.PORT) : 4000;
 const clientOrigin = process.env.CLIENT_ORIGIN ?? "http://localhost:5173";
 const isProduction = process.env.NODE_ENV === "production";
 
+if (isProduction && (!process.env.JWT_SECRET || process.env.JWT_SECRET === "dev-secret-change-me")) {
+  throw new Error(
+    "JWT_SECRET must be set to a strong, random value in production (refusing to start with the dev default)."
+  );
+}
+
 // Render (and most PaaS hosts) sit behind a reverse proxy, so requests arrive
 // from a single internal IP unless we trust X-Forwarded-For for the real one.
 app.set("trust proxy", 1);
