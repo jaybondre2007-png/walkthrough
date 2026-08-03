@@ -194,11 +194,6 @@ export function LoginPage() {
                 Create one
               </Link>
             </p>
-
-            <p className="mt-6 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-center text-xs text-neutral-400 dark:border-neutral-800 dark:bg-neutral-900">
-              Demo login: <span className="font-medium text-neutral-500 dark:text-neutral-300">demo@walkthrough.app</span> /{" "}
-              <span className="font-medium text-neutral-500 dark:text-neutral-300">demo1234</span>
-            </p>
           </>
         )}
       </div>
