@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: virginia
-    buildCommand: cd server && npm install && npx prisma generate && npm run build && cd ../client && npm install && npm run build
+    buildCommand: cd server && npm install --include=dev && npx prisma generate && npm run build && cd ../client && npm install --include=dev && npm run build
     startCommand: cd server && npx prisma migrate deploy && npm start
     healthCheckPath: /api/health
     envVars:
