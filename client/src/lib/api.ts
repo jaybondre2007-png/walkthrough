@@ -27,6 +27,28 @@ export class ApiError extends Error {
   }
 }
 
+/** Zod's safeParse errors arrive as `{ formErrors: string[], fieldErrors: Record<string, string[]> }`
+ * rather than a plain string; without this, that raw object gets JSON.stringify'd straight onto
+ * the screen instead of a readable sentence. */
+function extractErrorMessage(body: unknown, status: number): string {
+  const error = (body as { error?: unknown } | null)?.error;
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object") {
+    const { formErrors, fieldErrors } = error as {
+      formErrors?: unknown;
+      fieldErrors?: Record<string, unknown>;
+    };
+    if (Array.isArray(formErrors) && typeof formErrors[0] === "string") return formErrors[0];
+    if (fieldErrors) {
+      for (const messages of Object.values(fieldErrors)) {
+        if (Array.isArray(messages) && typeof messages[0] === "string") return messages[0];
+      }
+    }
+    return "Please check your input and try again.";
+  }
+  return `Request failed: ${status}`;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -35,8 +57,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    const message =
-      typeof body.error === "string" ? body.error : body.error ? JSON.stringify(body.error) : `Request failed: ${res.status}`;
+    const message = extractErrorMessage(body, res.status);
     if (res.status === 401 && !path.startsWith("/auth/")) {
       window.dispatchEvent(new Event("auth:unauthorized"));
     }

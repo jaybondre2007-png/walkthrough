@@ -91,7 +91,7 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   const parsed = credentialsSchema.pick({ email: true, password: true }).safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  if (!parsed.success) return res.status(401).json({ error: "Invalid email or password" });
 
   const { email, password } = parsed.data;
   const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
