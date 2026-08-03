@@ -117,7 +117,7 @@ export function AnalyticsPage() {
                   />
                   <Tooltip
                     cursor={false}
-                    formatter={(value: number, name: string) => [formatMoney(value, base), name]}
+                    formatter={(value, name) => [formatMoney(Number(value), base), String(name)]}
                     contentStyle={{ borderRadius: 8, border: "1px solid #e1e0d9", fontSize: 13 }}
                   />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
@@ -177,7 +177,7 @@ export function AnalyticsPage() {
                         ))}
                       </Pie>
                       <Tooltip
-                        formatter={(value: number, name: string) => [formatMoney(value, base), name]}
+                        formatter={(value, name) => [formatMoney(Number(value), base), String(name)]}
                         contentStyle={{ borderRadius: 8, border: "1px solid #e1e0d9", fontSize: 13 }}
                       />
                     </PieChart>
@@ -222,7 +222,7 @@ export function AnalyticsPage() {
                         ))}
                       </Pie>
                       <Tooltip
-                        formatter={(value: number, name: string) => [formatMoney(value, base), name]}
+                        formatter={(value, name) => [formatMoney(Number(value), base), String(name)]}
                         contentStyle={{ borderRadius: 8, border: "1px solid #e1e0d9", fontSize: 13 }}
                       />
                     </PieChart>
@@ -263,7 +263,7 @@ export function AnalyticsPage() {
                   />
                   <Tooltip
                     cursor={false}
-                    formatter={(value: number) => formatMoney(value, base)}
+                    formatter={(value) => formatMoney(Number(value), base)}
                     contentStyle={{ borderRadius: 8, border: "1px solid #e1e0d9", fontSize: 13 }}
                   />
                   <Bar
