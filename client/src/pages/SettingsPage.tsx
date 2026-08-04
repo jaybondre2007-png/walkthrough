@@ -521,7 +521,7 @@ function NotificationsSection() {
         </button>
       </div>
 
-      <form onSubmit={handleSaveThreshold} className="flex items-end gap-2">
+      <form onSubmit={handleSaveThreshold} className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div>
           <label className={labelClass}>Alert threshold</label>
           <div className="flex items-center gap-2">
@@ -532,11 +532,17 @@ function NotificationsSection() {
               max="100"
               value={threshold}
               onChange={(e) => setThreshold(e.target.value)}
+              disabled={!alertsEnabled}
             />
-            <span className="text-sm text-neutral-500">% spent, ahead of pace</span>
+            <span className="whitespace-nowrap text-sm text-neutral-500">% spent, ahead of pace</span>
           </div>
         </div>
-        <Button type="submit" size="sm" disabled={updateSettings.isPending}>
+        <Button
+          type="submit"
+          size="sm"
+          className="sm:ml-2"
+          disabled={updateSettings.isPending || !alertsEnabled}
+        >
           Save
         </Button>
       </form>
