@@ -19,14 +19,15 @@ model User {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  categories    Category[]
-  expenses      Expense[]
-  incomes       Income[]
-  exchangeRates ExchangeRate[]
-  settings      Settings?
-  sessions      Session[]
-  recoveryCodes RecoveryCode[]
-  recurring     RecurringTransaction[]
+  categories         Category[]
+  expenses           Expense[]
+  incomes            Income[]
+  exchangeRates      ExchangeRate[]
+  settings           Settings?
+  sessions           Session[]
+  recoveryCodes      RecoveryCode[]
+  recurring          RecurringTransaction[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Session {
@@ -45,6 +46,18 @@ model RecoveryCode {
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())
 

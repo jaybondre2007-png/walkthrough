@@ -35,7 +35,7 @@ The Vite dev server proxies `/api` requests to the backend, so just open http://
 
 ## Features
 
-- **Authentication** — email/password accounts, DB-tracked sessions via httpOnly cookies, per-user data isolation
+- **Authentication** — email/password accounts, DB-tracked sessions via httpOnly cookies, per-user data isolation, and self-service password reset via emailed link
 - **Two-factor authentication** — TOTP-based 2FA (Google Authenticator, Authy, etc.) with QR-code setup, one-time recovery codes for when you lose your device, and a code/recovery-code challenge at login
 - **Account security** — login rate-limiting with temporary lockout after repeated failed attempts, an active-sessions list showing every signed-in device with the ability to revoke any of them (or "sign out other devices" in one click), and permanent account deletion
 - **Dashboard** — quick-glance monthly overview: spend, budget remaining, top category, recent activity, and a proactive budget-pace alert banner
@@ -80,4 +80,5 @@ docker compose up -d
 - Two-factor recovery codes are bcrypt-hashed, never stored in plaintext. The TOTP secret itself (`User.twoFactorSecret`) is encrypted at rest with AES-256-GCM, keyed off `JWT_SECRET`.
 - `helmet` sets standard security headers (clickjacking/MIME-sniffing/HSTS protection, etc.); Content-Security-Policy is intentionally left off since the UI relies on inline `style` attributes for per-category theming.
 - All `/api` routes are rate-limited (300 requests/15 min per IP) in addition to the per-account login lockout, and JSON request bodies are capped at 100kb.
+- Password reset links are single-use, expire after 30 minutes, are stored hashed (never in plaintext), and resetting a password revokes all of that account's active sessions. The `/forgot-password` endpoint is rate-limited separately (5 requests/15 min per IP) and always returns the same response whether or not the email is registered, so it can't be used to check which emails have accounts. Set `RESEND_API_KEY` to actually send the emails — without it, reset links are logged to the server console instead (fine for local dev, not for production).
 - CSV/PDF export runs entirely client-side against your own data — no third-party services involved.

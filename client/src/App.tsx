@@ -11,6 +11,8 @@ import { CategoriesPage } from "./pages/CategoriesPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { useAuth } from "./lib/AuthContext";
 
 function AppShell() {
@@ -77,6 +79,8 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );

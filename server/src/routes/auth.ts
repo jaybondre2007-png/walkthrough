@@ -1,11 +1,13 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import rateLimit from "express-rate-limit";
 import { authenticator } from "otplib";
 import QRCode from "qrcode";
 import { z } from "zod";
 import { prisma } from "../prisma";
 import { encrypt, decrypt } from "../crypto";
+import { sendPasswordResetEmail } from "../email";
 import {
   clearAuthCookie,
   createSession,
@@ -196,6 +198,76 @@ router.post("/logout", async (req, res) => {
   const sessionId = getSessionIdFromRequest(req);
   if (sessionId) await prisma.session.delete({ where: { id: sessionId } }).catch(() => {});
   clearAuthCookie(res);
+  res.status(204).send();
+});
+
+// --- Password reset ---
+
+const PUBLIC_APP_URL = process.env.PUBLIC_APP_URL ?? "http://localhost:5173";
+const RESET_TOKEN_TTL_MINUTES = 30;
+
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.post("/forgot-password", forgotPasswordLimiter, async (req, res) => {
+  const parsed = z.object({ email: z.string().email() }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Enter a valid email address." });
+
+  const email = parsed.data.email.trim().toLowerCase();
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  // Always respond the same way whether or not the account exists, so this
+  // endpoint can't be used to check which emails are registered.
+  const genericResponse = {
+    message: "If an account exists for that email, we've sent a link to reset your password.",
+  };
+
+  if (user) {
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+    await prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        tokenHash,
+        expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60_000),
+      },
+    });
+    const resetUrl = `${PUBLIC_APP_URL}/reset-password?token=${rawToken}`;
+    sendPasswordResetEmail(user.email, resetUrl).catch((err) =>
+      console.error("sendPasswordResetEmail failed:", err)
+    );
+  }
+
+  res.json(genericResponse);
+});
+
+router.post("/reset-password", async (req, res) => {
+  const parsed = z
+    .object({ token: z.string().min(1), newPassword: z.string().min(8).max(200) })
+    .safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+
+  const tokenHash = crypto.createHash("sha256").update(parsed.data.token).digest("hex");
+  const record = await prisma.passwordResetToken.findUnique({ where: { tokenHash } });
+
+  if (!record || record.usedAt || record.expiresAt < new Date()) {
+    return res.status(400).json({ error: "This reset link is invalid or has expired. Request a new one." });
+  }
+
+  const passwordHash = await bcrypt.hash(parsed.data.newPassword, 10);
+
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: record.userId }, data: { passwordHash } }),
+    prisma.passwordResetToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
+    // Resetting the password is a strong signal to sign the account out
+    // everywhere else too, in case the reset was needed due to compromise.
+    prisma.session.deleteMany({ where: { userId: record.userId } }),
+  ]);
+
   res.status(204).send();
 });
 
